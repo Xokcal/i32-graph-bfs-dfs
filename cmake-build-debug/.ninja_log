@@ -1,0 +1,5 @@
+# ninja log v5
+2	75	8007787033680665	CMakeFiles/main.dir/main.c.obj	bc84364c844fb0e2
+5	77	8007787033700657	CMakeFiles/main.dir/graph/graph.c.obj	db7613242b5cdb3b
+0	152	8008168955533680	build.ninja	63b63173f539ba5a
+77	144	8007787034479805	main.exe	2cc10ec01be6eae
