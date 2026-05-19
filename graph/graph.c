@@ -110,8 +110,7 @@ Queue *create_queue(i32 capacity) {
  *       queue->tail++;
  *    }
  * */
-static void
-enqueue(Queue *queue, i32 new) {
+static void enqueue(Queue *queue, i32 new) {
     queue->arr[queue->tail++] = new;
 }
 
@@ -136,8 +135,7 @@ enqueue(Queue *queue, i32 new) {
  *                          |
  *                       head=1
  * */
-static i32
-dequeue(Queue *queue) {
+static i32 dequeue(Queue *queue) {
     return queue->arr[queue->head++];
 }
 
@@ -153,9 +151,42 @@ dequeue(Queue *queue) {
  *                                                  |
  *                                               head=1
  * */
-static i32
-is_queue_empty(Queue *queue) {
+static i32 is_queue_empty(Queue *queue) {
     return queue->head == queue->tail ? 1 : 0;
+}
+
+/* 栈处理：
+ * 入栈 ：
+ *                  0          1          2          3          4
+ *            +---------------------------------------------------+
+ *   <--- a   |  a（无用）|     b     |     c     |    d     |      |
+ *            +---------------------------------------------------+
+ *                                                   |        |
+ *                                                 tail     tail++
+ * */
+static void stack_push(Queue *queue, i32 new) {
+    queue->arr[queue->tail++] = new;
+}
+
+/* 出栈：
+ *                  0          1          2          3          4
+ *            +---------------------------------------------------+
+ *   <--- a   |  a（原点）|     b     |     c     |    d     |      |
+ *            +---------------------------------------------------+
+ *                |
+ *              tail
+ *
+ *                  0          1          2          3          4
+ *            +---------------------------------------------------+
+ *   <--- a   |  a（无用）|     b     |     c     |    d     |      |
+ *            +---------------------------------------------------+
+ *                                        |         |  |
+ *                                      tail--    tail `---------------->  d
+ *
+ * */
+static i32 stack_pop(Queue *queue){
+    if (queue->tail == 0)return -1;
+    return queue->arr[--queue->tail];
 }
 
 /* BFS:深度搜索
@@ -221,9 +252,14 @@ dfs_method(Graph *graph, i32 start, i32 t, i32 *bol) {
     bol[start] = 1;
     NeigNode *node = graph->NeigArr[start];
     while (node != NULL) {
+        if (start == t) {
+            printf("[DFS RESULT] : %d\n", node->neig);
+            return;
+        }
         if (bol[node->neig] == 0) {
             bol[node->neig] = 1;
-            dfs(graph, node->neig, t);
+            //就是每进一个新的递归都是一个新的节点，直接把它当可能的目标处理就行了
+            dfs_method(graph, node->neig, t, bol);
         }
         node = node->nextNeig;
     }
@@ -232,6 +268,7 @@ dfs_method(Graph *graph, i32 start, i32 t, i32 *bol) {
 void dfs(Graph *graph, i32 start, i32 t) {
     i32 *bol = (i32 *) calloc(graph->topSum, sizeof(i32));
     dfs_method(graph, start, t, bol);
+    free(bol);
 }
 
 #define WITHD 10
@@ -271,4 +308,140 @@ void bfs_map(i32 arr[HEIGHT][WITHD], i32 start_y, i32 start_x, i32 t_y, i32 t_x)
     return;
 }
 
+static i32 is_find = 0;
+
+static void
+dfs_map_method(i32 map[HEIGHT][WITHD], i32 *bol, i32 start_x, i32 start_y, i32 t_y, i32 t_x) {
+    printf("[DFS MAP] current place is [%d][%d]\n", start_x, start_y);
+    i32 n_y[] = {-1, 1, 0, 0};
+    i32 n_x[] = {0, 0, -1, 1};
+    bol[start_y * WITHD + start_x] = 1;
+    //判断新节点是否是目标节点
+    if (start_x == t_y && start_y == t_x) {
+        printf("\n[DFS MAP RESULT] result is [%d][%d]\n", start_x, start_y);
+        is_find = 1;
+        return;
+    }
+
+    for (int i = 0; i < 4; ++i) {
+        //拿到新节点的坐标（有四个）
+        i32 new_height = start_y + n_y[i]; // [-1][0]
+        i32 new_width = start_x + n_x[i]; // [0][0]
+        if (new_width < WITHD && new_width >= 0 && new_height < HEIGHT && new_height >= 0 &&
+            map[new_height][new_width] != 1 && bol[new_height * WITHD + new_width] == 0) {
+            bol[new_height * WITHD + new_width] = 1;
+            //每拿到一个都直接递归
+//            printf("[DFS TEST] current place is [%d][%d]\n" , new_width , new_height);
+            if (is_find == 1)return;
+            dfs_map_method(map, bol, new_width, new_height, t_y, t_x);
+        }
+        //接下来他会自己退出，并且循环拿到新坐标..
+    }
+}
+
+void dfs_map(i32 map[HEIGHT][WITHD], i32 start_x, i32 start_y, i32 t_y, i32 t_x) {
+    i32 *bol = (i32 *) calloc((HEIGHT * WITHD), sizeof(i32)); // all is "0";
+    dfs_map_method(map, bol, start_x, start_y, t_y, t_x);
+    free(bol);
+}
+
+static void
+dfs_map_method_test(i32 map[HEIGHT][WITHD], Queue *q, i32 *bol, i32 start_x, i32 start_y, i32 t_y, i32 t_x) {
+    printf("[DFS MAP] current place is [%d][%d]\n", start_x, start_y);
+    i32 n_y[] = {-1, 1, 0, 0};
+    i32 n_x[] = {0, 0, -1, 1};
+    bol[start_y * WITHD + start_x] = 1;
+    //判断新节点是否是目标节点
+    if (start_y == t_y && start_x == t_x) {
+        printf("\n[DFS MAP RESULT] result is [%d][%d]\n", start_x, start_y);
+        is_find = 1;
+        record_map_path(map, q, start_x, start_y);
+        return;
+    }
+
+    for (int i = 0; i < 4; ++i) {
+        //拿到新节点的坐标（有四个）
+        i32 new_height = start_y + n_y[i]; // [-1][0]
+        i32 new_width = start_x + n_x[i]; // [0][0]
+        if (new_width < WITHD && new_width >= 0 && new_height < HEIGHT && new_height >= 0 &&
+            map[new_height][new_width] != 1 && bol[new_height * WITHD + new_width] == 0) {
+            bol[new_height * WITHD + new_width] = 1;
+            //每拿到一个都直接递归
+//            printf("[DFS TEST] current place is [%d][%d]\n" , new_width , new_height);
+            if (is_find == 1)return;
+            stack_push(q, (new_height * WITHD + new_width));
+            dfs_map_method_test(map, q, bol, new_width, new_height, t_y, t_x);
+            stack_pop(q);
+        }
+        //接下来他会自己退出，并且循环拿到新坐标..
+    }
+}
+
+void dfs_map_path
+        (i32 map[HEIGHT][WITHD], i32 start_x, i32 start_y, i32 t_y, i32 t_x) {
+    i32 *bol = (i32 *) calloc((HEIGHT * WITHD), sizeof(i32)); // all is "0";
+    Queue *q = create_queue(HEIGHT * WITHD);
+    dfs_map_method_test(map, q, bol, start_x, start_y, t_y, t_x);
+    free(bol);
+}
+
+static void record_map_path(i32 map[HEIGHT][WITHD], Queue *q, i32 start_x, i32 start_y) {
+    while (q->tail > 0) {
+        i32 currI = stack_pop(q);
+        i32 height = currI / HEIGHT;
+        i32 width = currI % HEIGHT;
+        map[height][width] = 5;
+    }
+    printf("\n");
+    for (int i = 0; i < WITHD; ++i) {
+        printf("[");
+        for (int j = 0; j < HEIGHT; ++j) {
+            if (start_y == i && start_x == j) {
+                if (j == WITHD - 1 && i != HEIGHT - 1){
+                    map[i][j] = 9;
+                    printf("%d]\n", map[i][j]);
+                } else if (j == WITHD - 1){
+                    map[i][j] = 9;
+                    printf("%d", map[i][j]);
+                } else {
+                    map[i][j] = 9;
+                    printf("%d,", map[i][j]);
+                }
+            } else if (i == WITHD - 1 && j == HEIGHT - 1) {
+                printf("%d", map[i][j]);
+            } else if (j == HEIGHT - 1) {
+                printf("%d]\n", map[i][j]);
+            } else {
+                printf("%d,", map[i][j]);
+            }
+        }
+    }
+    printf("]\n");
+}
+
+//(9 , 7)
+
+//for (int i = 0; i < WITHD; ++i) {
+//printf("[");
+//for (int j = 0; j < HEIGHT; ++j) {
+//if (start_y == i && start_x == j) {
+//if (j == WITHD - 1 && i != HEIGHT - 1){
+//map[i][j] = 9;
+//printf("%d]\n", map[i][j]);
+//} else if (i == HEIGHT - 1){
+//map[i][j] = 9;
+//printf("%d", map[i][j]);
+//} else {
+//map[i][j] = 9;
+//printf("%d,", map[i][j]);
+//}
+//} else if (i == WITHD - 1 && j == HEIGHT - 1) {
+//printf("%d", map[i][j]);
+//} else if (j == HEIGHT - 1) {
+//printf("%d]\n", map[i][j]);
+//} else {
+//printf("%d,", map[i][j]);
+//}
+//}
+//}
 

@@ -38,15 +38,26 @@ typedef struct Queue {
     i32                     capacity;
 } Queue;
 
-Graph *createGraph(i32 topSumSet);
-Graph *graph_add_neig(Graph *graph, i32 host, i32 be_neig);
-void print_graph(Graph *graph);
-void bfs(Graph *graph, i32 start, i32 t);
-void dfs(Graph *graph, i32 start, i32 t);
-
 #define WITHD 10
+
 #define HEIGHT 10
 
-void bfs_map(i32 arr[HEIGHT][WITHD], i32 start_y, i32 start_x, i32 t_y, i32 t_x);
+Graph *createGraph(i32 topSumSet);
+
+Graph *graph_add_neig(Graph *graph, i32 host, i32 be_neig);
+
+void print_graph(Graph *graph);
+
+void bfs(Graph *graph, i32 start, i32 t);
+
+void dfs(Graph *graph, i32 start, i32 t);
+
+void bfs_map(i32 arr[HEIGHT][WITHD],i32 start_y, i32 start_x, i32 t_y, i32 t_x);
+
+void dfs_map(i32 map[HEIGHT][WITHD], i32 start_x, i32 start_y, i32 t_y, i32 t_x);
+
+void dfs_map_path(i32 map[HEIGHT][WITHD], i32 start_x, i32 start_y, i32 t_y, i32 t_x);
+
+static void record_map_path(i32 map[HEIGHT][WITHD] , Queue *q , i32 start_x, i32 start_y);
 
 #endif //手搓图_GRAPH_H
